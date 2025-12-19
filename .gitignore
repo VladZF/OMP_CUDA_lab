@@ -1,2 +1,4 @@
 Mandelbrot/BuildFiles
 Mandelbrot/ComputedSets
+NBody/OMP/BuildFiles
+NBody/OMP/ComputedTrajectories
