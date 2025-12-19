@@ -49,4 +49,6 @@ for threads in "${THREADS_LIST[@]}"; do
     done
 done
 
-echo "All tests completed. Results saved to $LOG_FILE"
+python3 charts_gen.py
+
+echo "All tests completed. Performance data saved to $LOG_FILE. Charts created in benchmark.png"
