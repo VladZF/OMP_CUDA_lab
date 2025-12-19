@@ -58,7 +58,9 @@ int main(int argc, char** argv) {
     double *fx = malloc(sizeof(double) * n);
     double *fy = malloc(sizeof(double) * n);
 
-    double elapsed_time = 0;
+
+    double start_time = omp_get_wtime();
+
     double t = 0.0;
     while (t <= t_end) {
         fprintf(out, "%.2f", t);
@@ -72,7 +74,6 @@ int main(int argc, char** argv) {
             fy[i] = 0.0;
         }
 
-        double start_time = omp_get_wtime();
         #pragma omp parallel for reduction(+:fx[0:n], fy[0:n]) schedule(dynamic)
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
@@ -102,10 +103,12 @@ int main(int argc, char** argv) {
             bodies[i].vy += (fy[i] / bodies[i].m) * DT;
         }
 
-        double end_time = omp_get_wtime();
-        elapsed_time += (end_time - start_time);
         t += DT;
     }
+
+    double end_time = omp_get_wtime();
+
+    double elapsed_time = end_time - start_time;
 
     fprintf(stdout, "Taken %lf seconds on %d threads.\n", elapsed_time, nthreads);
 
