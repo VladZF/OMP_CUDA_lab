@@ -162,7 +162,6 @@ int main(int argc, char** argv) {
         t += DT;
     }
     
-    // Небольшая синхронизация перед финальным принтом
     cudaDeviceSynchronize();
     printf("Simulation complete.\n");
 

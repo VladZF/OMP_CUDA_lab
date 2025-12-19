@@ -15,10 +15,8 @@ INITIAL_INSERTS=1000
 TOTAL_OPS=100000
 THREADS_LIST=(1 2 4 8)
 
-# Инициализация CSV с заголовками
 echo "Scenario,Threads,Custom_Time_Sec,StdLib_Time_Sec" > $CSV_FILE
 
-# Сценарии: "Имя Search% Insert%"
 SCENARIOS=("ReadHeavy 0.90 0.05" "WriteHeavy 0.50 0.25")
 
 echo "Starting Comprehensive Benchmark..."
@@ -27,14 +25,11 @@ printf "%-12s | %-7s | %-12s | %-12s\n" "Scenario" "Threads" "Custom (s)" "StdLi
 echo "---------------------------------------------------------"
 
 for scenario in "${SCENARIOS[@]}"; do
-    # Разбор строки сценария
     read -r NAME SEARCH_PCT INSERT_PCT <<< "$scenario"
     
     for threads in "${THREADS_LIST[@]}"; do
         INPUT_DATA="$INITIAL_INSERTS $TOTAL_OPS $SEARCH_PCT $INSERT_PCT"
         
-        # 1. Custom Run
-        # Используем timeout на случай ошибок логики
         OUTPUT_CUSTOM=$(echo "$INPUT_DATA" | timeout 15s $BUILD_DIR/custom_rwl $threads)
         if [ $? -eq 124 ]; then
             TIME_CUSTOM="TIMEOUT"
@@ -42,7 +37,6 @@ for scenario in "${SCENARIOS[@]}"; do
             TIME_CUSTOM=$(echo "$OUTPUT_CUSTOM" | grep "Elapsed time" | awk '{print $4}')
         fi
         
-        # 2. StdLib Run
         OUTPUT_STD=$(echo "$INPUT_DATA" | timeout 15s $BUILD_DIR/std_rwl $threads)
         if [ $? -eq 124 ]; then
             TIME_STD="TIMEOUT"
@@ -50,10 +44,8 @@ for scenario in "${SCENARIOS[@]}"; do
             TIME_STD=$(echo "$OUTPUT_STD" | grep "Elapsed time" | awk '{print $4}')
         fi
         
-        # Вывод в консоль красиво
         printf "%-12s | %-7d | %-12s | %-12s\n" "$NAME" "$threads" "$TIME_CUSTOM" "$TIME_STD"
         
-        # Сохранение в файл
         echo "$NAME,$threads,$TIME_CUSTOM,$TIME_STD" >> $CSV_FILE
     done
     echo "---------------------------------------------------------"

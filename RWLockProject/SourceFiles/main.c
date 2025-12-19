@@ -6,15 +6,12 @@
 #include "my_rand.h"
 #include "my_rwlock.h"
 
-// --- TIMER MACRO IMPLEMENTATION ---
 #define GET_TIME(now) { \
    struct timeval t; \
    gettimeofday(&t, NULL); \
    now = t.tv_sec + t.tv_usec/1000000.0; \
 }
-// ----------------------------------
 
-// Макросы для переключения реализации
 #ifdef USE_STD_LIB
     #define RWLOCK_T pthread_rwlock_t
     #define RWLOCK_INIT(l) { \
