@@ -20,10 +20,8 @@
     #define RWLOCK_INIT(l) { \
         pthread_rwlockattr_t attr; \
         pthread_rwlockattr_init(&attr); \
-        /* Пытаемся включить приоритет писателей для честного сравнения, если OS позволяет */ \
-        /* В Linux по умолчанию приоритет читателей, из-за чего тест может зависать */ \
-        /* pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP); */ \
         pthread_rwlock_init(l, &attr); \
+        pthread_rwlockattr_destroy(&attr); \
     }
     #define RWLOCK_DESTROY(l) pthread_rwlock_destroy(l)
     #define RWLOCK_RDLOCK(l) pthread_rwlock_rdlock(l)
@@ -51,7 +49,7 @@ int         total_ops;
 double      insert_percent;
 double      search_percent;
 double      delete_percent;
-RWLOCK_T    rwlock;                 // ИЗМЕНЕНО: Используем макрос типа
+RWLOCK_T    rwlock;
 pthread_mutex_t     count_mutex;
 int         member_count = 0, insert_count = 0, delete_count = 0;
 
@@ -90,7 +88,7 @@ int main(int argc, char* argv[]) {
    thread_handles = malloc(thread_count*sizeof(pthread_t));
    pthread_mutex_init(&count_mutex, NULL);
    
-   RWLOCK_INIT(&rwlock); // ИЗМЕНЕНО: Инициализация через макрос
+   RWLOCK_INIT(&rwlock);
 
    GET_TIME(start);
    for (i = 0; i < thread_count; i++)
@@ -108,7 +106,7 @@ int main(int argc, char* argv[]) {
 
    Free_list();
    
-   RWLOCK_DESTROY(&rwlock); // ИЗМЕНЕНО
+   RWLOCK_DESTROY(&rwlock);
    pthread_mutex_destroy(&count_mutex);
    free(thread_handles);
 
@@ -121,9 +119,6 @@ void Usage(char* prog_name) {
 }
 
 void Get_input(int* inserts_in_main_p) {
-   // Хардкодим ввод для автоматического тестирования через скрипт
-   // Или читаем из stdin, если скрипт подает данные
-   // Для удобства оставим scanf, но скрипт должен подавать данные через pipe
    scanf("%d", inserts_in_main_p);
    scanf("%d", &total_ops);
    scanf("%lf", &search_percent);
@@ -240,19 +235,19 @@ void* Thread_work(void* rank) {
       which_op = my_drand(&seed);
       val = my_rand(&seed) % MAX_KEY;
       if (which_op < search_percent) {
-         RWLOCK_RDLOCK(&rwlock); // ИЗМЕНЕНО
+         RWLOCK_RDLOCK(&rwlock);
          Member(val);
-         RWLOCK_UNLOCK(&rwlock); // ИЗМЕНЕНО
+         RWLOCK_UNLOCK(&rwlock);
          my_member_count++;
       } else if (which_op < search_percent + insert_percent) {
-         RWLOCK_WRLOCK(&rwlock); // ИЗМЕНЕНО
+         RWLOCK_WRLOCK(&rwlock);
          Insert(val);
-         RWLOCK_UNLOCK(&rwlock); // ИЗМЕНЕНО
+         RWLOCK_UNLOCK(&rwlock);
          my_insert_count++;
       } else {
-         RWLOCK_WRLOCK(&rwlock); // ИЗМЕНЕНО
+         RWLOCK_WRLOCK(&rwlock);
          Delete(val);
-         RWLOCK_UNLOCK(&rwlock); // ИЗМЕНЕНО
+         RWLOCK_UNLOCK(&rwlock);
          my_delete_count++;
       }
    }

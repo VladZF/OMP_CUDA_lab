@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export TIMEFORMAT='%R'
 BUILD_DIR="BuildFiles"
 CSV_FILE="benchmark_results.csv"
 
@@ -13,38 +13,50 @@ gcc -O3 -pthread -DUSE_STD_LIB SourceFiles/main.c SourceFiles/my_rwlock.c Source
 
 INITIAL_INSERTS=1000
 TOTAL_OPS=100000
-SEARCH_PCT=0.90
-INSERT_PCT=0.05
-
 THREADS_LIST=(1 2 4 8)
 
-echo "Threads,Custom_Time_Sec,StdLib_Time_Sec" > $CSV_FILE
+# Инициализация CSV с заголовками
+echo "Scenario,Threads,Custom_Time_Sec,StdLib_Time_Sec" > $CSV_FILE
 
-echo "Benchmark: $TOTAL_OPS operations, 90% reads"
-echo "Threads | Custom (s) | StdLib (s)"
-echo "---------------------------------"
+# Сценарии: "Имя Search% Insert%"
+SCENARIOS=("ReadHeavy 0.90 0.05" "WriteHeavy 0.50 0.25")
 
-for threads in "${THREADS_LIST[@]}"; do
-    INPUT_DATA="$INITIAL_INSERTS $TOTAL_OPS $SEARCH_PCT $INSERT_PCT"
-    OUTPUT_CUSTOM=$(echo "$INPUT_DATA" | timeout 10s $BUILD_DIR/custom_rwl $threads)
+echo "Starting Comprehensive Benchmark..."
+echo "---------------------------------------------------------"
+printf "%-12s | %-7s | %-12s | %-12s\n" "Scenario" "Threads" "Custom (s)" "StdLib (s)"
+echo "---------------------------------------------------------"
+
+for scenario in "${SCENARIOS[@]}"; do
+    # Разбор строки сценария
+    read -r NAME SEARCH_PCT INSERT_PCT <<< "$scenario"
     
-    if [ $? -eq 124 ]; then
-        TIME_CUSTOM="TIMEOUT"
-    else
-        TIME_CUSTOM=$(echo "$OUTPUT_CUSTOM" | grep "Elapsed time" | awk '{print $4}')
-    fi
-    
-    OUTPUT_STD=$(echo "$INPUT_DATA" | timeout 10s $BUILD_DIR/std_rwl $threads)
-    
-    if [ $? -eq 124 ]; then
-        TIME_STD="TIMEOUT"
-    else
-        TIME_STD=$(echo "$OUTPUT_STD" | grep "Elapsed time" | awk '{print $4}')
-    fi
-    
-    echo "   $threads    |  $TIME_CUSTOM  |  $TIME_STD"
-    echo "$threads,$TIME_CUSTOM,$TIME_STD" >> $CSV_FILE
+    for threads in "${THREADS_LIST[@]}"; do
+        INPUT_DATA="$INITIAL_INSERTS $TOTAL_OPS $SEARCH_PCT $INSERT_PCT"
+        
+        # 1. Custom Run
+        # Используем timeout на случай ошибок логики
+        OUTPUT_CUSTOM=$(echo "$INPUT_DATA" | timeout 15s $BUILD_DIR/custom_rwl $threads)
+        if [ $? -eq 124 ]; then
+            TIME_CUSTOM="TIMEOUT"
+        else
+            TIME_CUSTOM=$(echo "$OUTPUT_CUSTOM" | grep "Elapsed time" | awk '{print $4}')
+        fi
+        
+        # 2. StdLib Run
+        OUTPUT_STD=$(echo "$INPUT_DATA" | timeout 15s $BUILD_DIR/std_rwl $threads)
+        if [ $? -eq 124 ]; then
+            TIME_STD="TIMEOUT"
+        else
+            TIME_STD=$(echo "$OUTPUT_STD" | grep "Elapsed time" | awk '{print $4}')
+        fi
+        
+        # Вывод в консоль красиво
+        printf "%-12s | %-7d | %-12s | %-12s\n" "$NAME" "$threads" "$TIME_CUSTOM" "$TIME_STD"
+        
+        # Сохранение в файл
+        echo "$NAME,$threads,$TIME_CUSTOM,$TIME_STD" >> $CSV_FILE
+    done
+    echo "---------------------------------------------------------"
 done
 
-echo "---------------------------------"
-echo "Done. Results saved to $CSV_FILE"
+echo "Benchmark completed. Results saved to $CSV_FILE"

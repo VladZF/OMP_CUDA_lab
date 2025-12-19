@@ -1,5 +1,9 @@
-Threads,Custom_Time_Sec,StdLib_Time_Sec
-1,5.863290e-01,5.618341e-01
-2,4.817400e-01,5.148211e-01
-4,3.874290e-01,5.693099e-01
-8,3.416121e-01,6.421051e-01
+Scenario,Threads,Custom_Time_Sec,StdLib_Time_Sec
+ReadHeavy,1,5.887461e-01,5.707901e-01
+ReadHeavy,2,4.627590e-01,5.184851e-01
+ReadHeavy,4,3.840542e-01,5.667589e-01
+ReadHeavy,8,3.507631e-01,6.339459e-01
+WriteHeavy,1,5.280915e+00,5.116863e+00
+WriteHeavy,2,5.023377e+00,6.015026e+00
+WriteHeavy,4,4.685782e+00,6.380963e+00
+WriteHeavy,8,4.489996e+00,6.714105e+00
