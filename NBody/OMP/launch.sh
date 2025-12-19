@@ -8,7 +8,7 @@ OUT_DIR="ComputedTrajectories"
 LOG_FILE="benchmark_results.csv"
 
 # Параметры запуска
-THREADS_LIST=(1 2 4 8 12 16)
+THREADS_LIST=(1 2 4 8 16)
 POINTS_LIST=(1024 2048 4096 8192 16384)
 T_END=500.0
 
@@ -74,4 +74,6 @@ for threads in "${THREADS_LIST[@]}"; do
     done
 done
 
-echo "All tests completed. Performance data saved to $LOG_FILE"
+python3 charts_gen.py
+
+echo "All tests completed. Performance data saved to $LOG_FILE. Charts created in benchmark.png"
