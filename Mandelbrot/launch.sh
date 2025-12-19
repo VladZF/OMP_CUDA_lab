@@ -8,7 +8,6 @@ EXE_MC="$BUILD_DIR/monte_carlo"
 EXE_GRID="$BUILD_DIR/grid_search"
 
 OUT_DIR="ComputedSets"
-LOG_FILE="benchmark_results.csv"
 
 THREADS_LIST=(1 2 4 8 12 16)
 POINTS_LIST=(10000 100000 1000000 10000000)
@@ -36,19 +35,21 @@ fi
 echo "Compilation successful for both programs."
 echo "==========================================="
 
-echo "Threads,Points,Time_Seconds" > $LOG_FILE
-
 METHODS=("montecarlo" "grid")
 
 for method in "${METHODS[@]}"; do
-    
-    if [ "$method" == "montecarlo" ]; then
+    LOG_FILE="benchmark_results.csv"
+    if [ "$method" = "montecarlo" ]; then
         CURRENT_EXE=$EXE_MC
+        LOG_FILE="Monte-Carlo/$LOG_FILE"
         CSV_NAME="mandelbrot-points.csv"
     else
         CURRENT_EXE=$EXE_GRID
+        LOG_FILE="Grid/$LOG_FILE"
         CSV_NAME="mandelbrot.csv"
     fi
+    
+    echo "Threads,Points,Time_Seconds" > $LOG_FILE
 
     for threads in "${THREADS_LIST[@]}"; do
         for points in "${POINTS_LIST[@]}"; do      
@@ -57,7 +58,7 @@ for method in "${METHODS[@]}"; do
             OUTPUT=$($CURRENT_EXE $threads $points)
             echo "$OUTPUT"
 
-            if [ "$method" == "montecarlo" ]; then
+            if [ "$method" = "montecarlo" ]; then
                 EXEC_TIME=$(echo "$OUTPUT" | grep "Time taken" | awk '{print $3}')
             else
                 EXEC_TIME=$(echo "$OUTPUT" | grep "Time taken" | awk '{print $3}')
